@@ -21,11 +21,8 @@
 
 +(void)takeOff:(ForgeTask*) command {
 	NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
-	//NSString *assetsFolder = [[ForgeApp sharedApp] assetsFolderLocationWithPrefs:prefs];
     NSURL *assetsFolder = [[ForgeApp sharedApp] assetsFolderLocationWithPrefs:prefs];
-	//NSString *configPath = [[assetsFolder stringByAppendingPathComponent:@"src"] stringByAppendingPathComponent:[[[ForgeApp sharedApp] configForModule:@"urbanairship"] objectForKey:@"airshipConfigPlist"]];
     NSURL *configPath = [[assetsFolder URLByAppendingPathComponent:@"src"] URLByAppendingPathComponent:[[[ForgeApp sharedApp] configForModule:@"urbanairship"] objectForKey:@"airshipConfigPlist"]];
-	//UAConfig* config = [UAConfig configWithContentsOfFile:configPath];
     UAConfig* config = [UAConfig configWithContentsOfFile:[configPath absoluteString]];
 
 	[UAirship takeOff:config];
