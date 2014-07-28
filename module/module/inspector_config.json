@@ -1,12 +1,11 @@
 {
 	"modules": {
-		"urbanairship": {
-			"config": {
-				"airshipProperties": "fixtures/urbanairship/airshipconfig.properties",
-				"locationProperties": "fixtures/urbanairship/location.properties",
-				"airshipConfigPlist": "fixtures/urbanairship/AirshipConfig.plist"
-			},
-			"version": "example"
+	},
+	"this_module": {
+		"config": {
+			"airshipProperties": "fixtures/urbanairship/airshipconfig.properties",
+			"locationProperties": "fixtures/urbanairship/location.properties",
+			"airshipConfigPlist": "fixtures/urbanairship/AirshipConfig.plist"
 		}
 	}
 }

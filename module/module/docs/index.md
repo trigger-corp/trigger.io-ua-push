@@ -5,7 +5,7 @@ Ported and modified with permission, from the official phonegap plugin.
 
 
 ### project url
-[https://github.com/Ansr-io/trigger.io-ua-push](https://github.com/Ansr-io/trigger.io-ua-push)
+[https://github.com/trigger-corp/trigger.io-ua-push/](https://github.com/trigger-corp/trigger.io-ua-push/)
 
 ### project author
 petehobo @ gmail DOT com

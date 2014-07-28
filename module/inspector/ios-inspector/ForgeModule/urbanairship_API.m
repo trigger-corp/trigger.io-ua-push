@@ -82,7 +82,7 @@
 
 
         UIRemoteNotificationType bitmask = text ;
-        UALOG(@"bitmask value: %d", text);
+        UALOG(@"bitmask value: %@", text);
         [[UAPush shared] registerForRemoteNotificationTypes:bitmask];
         [command success:nil];
         //[command success:nil];

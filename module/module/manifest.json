@@ -1,6 +1,8 @@
 {
-	"platform_version": "v2.0.4",
-	"version": "0.4.37",
 	"description": "Urban Airship Plugin",
-	"name": "urbanairship"
+	"namespace": "urbanairship",
+	"platform_version": "v2.1.9",
+	"min_platform_version": "v2.1.9",
+	"version": "2.1",
+	"changes": "* Support for Forge platform version > 2.1.9"
 }
