@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -28,10 +28,10 @@
 
 @interface UALocationSettingsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource, UALocationServiceDelegate>
 
-@property (nonatomic, retain) UALocationService *locationService;
-@property (nonatomic, retain) NSMutableArray *locationDisplay;
-@property (nonatomic, retain) NSMutableArray *reportedLocations;
-@property (nonatomic, retain) IBOutlet UITableView *locationTableView;
+@property (nonatomic, strong) UALocationService *locationService;
+@property (nonatomic, strong) NSMutableArray *locationDisplay;
+@property (nonatomic, strong) NSMutableArray *reportedLocations;
+@property (nonatomic, weak) IBOutlet UITableView *locationTableView;
 
 - (void)setupLocationDisplay;
 

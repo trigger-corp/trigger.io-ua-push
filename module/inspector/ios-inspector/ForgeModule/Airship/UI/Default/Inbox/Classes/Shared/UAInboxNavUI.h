@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -27,10 +27,8 @@
 
 #import "UAInboxAlertHandler.h"
 #import "UAInbox.h"
-
 #import "UAInboxMessageListController.h"
 #import "UAInboxMessageViewController.h"
-
 #import "UAInboxPushHandler.h"
 
 #ifndef UA_INBOX_TR
@@ -63,24 +61,24 @@
 /**
  * The button used to launch the popover display.
  */
-@property (nonatomic, retain) UIBarButtonItem *popoverButton;
+@property (nonatomic, strong) UIBarButtonItem *popoverButton;
 
 /**
  * The popover controller used for displaying the inbox in the iPad UI idiom.
  */
-@property (nonatomic, retain) UIPopoverController *popoverController;
+@property (nonatomic, strong) UIPopoverController *popoverController;
 
 /**
  * The navigation controller used for displaying the inbox in the iPhone idiom.
  */
-@property (nonatomic, retain) UINavigationController *navigationController;
+@property (nonatomic, strong) UINavigationController *navigationController;
 
 /**
  * The parent view controller the inbox will be launched from.
  */
-@property (nonatomic, retain) UIViewController *inboxParentController;
+@property (nonatomic, strong) UIViewController *inboxParentController;
 
-@property (nonatomic, retain) NSBundle *localizationBundle;
+@property (nonatomic, strong) NSBundle *localizationBundle;
 
 
 SINGLETON_INTERFACE(UAInboxNavUI);

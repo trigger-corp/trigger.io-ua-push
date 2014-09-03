@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -25,15 +25,17 @@
 
 
 #import <UIKit/UIKit.h>
-#import "UAInboxMessageListObserver.h"
-#import "UABarButtonSegmentedControl.h"
+#import "UAInboxMessageListDelegate.h"
 #import "UABeveledLoadingIndicator.h"
 
 /**
  * This class is a reference implementation of a table view controller drawing from the inbox
  * message list.
  */
-@interface UAInboxMessageListController : UIViewController <UITableViewDelegate, UITableViewDataSource, UAInboxMessageListObserver>
+@interface UAInboxMessageListController : UIViewController <UITableViewDelegate,
+                                                            UITableViewDataSource,
+                                                            UAInboxMessageListDelegate,
+                                                            UIScrollViewDelegate>
 
 /**
  * Set this property to YES if the class should show alert dialogs in erroneous

@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -40,14 +40,14 @@ SINGLETON_IMPLEMENTATION(UAPushUI)
         self.localizationBundle = [NSBundle bundleWithPath:path];
     
     }
-	return self;
+    return self;
 }
 
 - (UIViewController *)apnsSettingsViewController {
     if (!_apnsSettingsViewController) {
-        UIViewController *root = [[[UAPushSettingsViewController alloc]
+        UIViewController *root = [[UAPushSettingsViewController alloc]
                                    initWithNibName:@"UAPushSettingsView"
-                                            bundle:nil] autorelease];
+                                            bundle:nil];
         _apnsSettingsViewController = [[UINavigationController alloc] initWithRootViewController:root];
     }
     return _apnsSettingsViewController;
@@ -55,9 +55,9 @@ SINGLETON_IMPLEMENTATION(UAPushUI)
 
 - (UIViewController *)tokenSettingsViewController {
     if (!_tokenSettingsViewController) {
-        UIViewController *root = [[[UAPushMoreSettingsViewController alloc]
+        UIViewController *root = [[UAPushMoreSettingsViewController alloc]
                                    initWithNibName:@"UAPushMoreSettingsView"
-                                            bundle:nil] autorelease];
+                                            bundle:nil];
         _tokenSettingsViewController = [[UINavigationController alloc] initWithRootViewController:root];
     }
     return _tokenSettingsViewController;
@@ -65,29 +65,25 @@ SINGLETON_IMPLEMENTATION(UAPushUI)
 
 + (void)openApnsSettings:(UIViewController *)viewController
                 animated:(BOOL)animated {
-    [viewController presentModalViewController:[UAPushUI shared].apnsSettingsViewController
-                                      animated:animated];
+    [viewController presentViewController:[UAPushUI shared].apnsSettingsViewController
+                                 animated:animated
+                               completion:NULL];
 }
 
 + (void)openTokenSettings:(UIViewController *)viewController
                  animated:(BOOL)animated {
-    [viewController presentModalViewController:[UAPushUI shared].tokenSettingsViewController
-                                      animated:animated];
+    [viewController presentViewController:[UAPushUI shared].tokenSettingsViewController
+                                 animated:animated
+                               completion:NULL];
 }
 
 + (void)closeApnsSettingsAnimated:(BOOL)animated {
-    [[UAPushUI shared].apnsSettingsViewController dismissModalViewControllerAnimated:animated];
+    [[UAPushUI shared].apnsSettingsViewController dismissViewControllerAnimated:animated completion:NULL];
 }
 
 + (void)closeTokenSettingsAnimated:(BOOL)animated {
-    [[UAPushUI shared].tokenSettingsViewController dismissModalViewControllerAnimated:animated];
+    [[UAPushUI shared].tokenSettingsViewController dismissViewControllerAnimated:animated completion:NULL];
 }
 
-- (void)dealloc {
-    self.localizationBundle = nil;
-    self.apnsSettingsViewController = nil;
-    self.tokenSettingsViewController = nil;
-    [super dealloc];
-}
 
 @end

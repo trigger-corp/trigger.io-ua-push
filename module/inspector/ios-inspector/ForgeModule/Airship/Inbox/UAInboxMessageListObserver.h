@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * An observer is notified when messages are modified, loaded or
  * fail to load or update.
+ *
+ * @deprecated As of version 3.0. Replaced NSNotification and callback-based
+ * methods in `UAPush`, `UAInboxMessage` and `UAInboxMessageList`. 
  */
+__attribute__((deprecated("As of version 3.0")))
 @protocol UAInboxMessageListObserver <NSObject>
 
 @optional

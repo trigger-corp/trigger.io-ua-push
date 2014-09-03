@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -61,8 +61,14 @@
 /**
  * The purpose associated with the CLLocationManager that is displayed to the user when
  * permission for location services is required.
+ * @return The location manager purpose as an NSString.
  */
 - (NSString *)purpose;
+
+/**
+ * Set the location manager purpose.
+ * @param newPurpose The new purpose to set.
+ */
 - (void)setPurpose:(NSString *)newPurpose;
 
 /**

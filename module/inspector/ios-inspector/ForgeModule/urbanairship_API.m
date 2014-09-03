@@ -33,8 +33,7 @@
                                          UIRemoteNotificationTypeSound |
                                          UIRemoteNotificationTypeAlert)];
 
-    [[UAPush shared] setDelegate:self];
-
+    [[UAPush shared] setPushNotificationDelegate:self];
 }
 
 + (NSString *)alertForUserInfo:(NSDictionary *)userInfo {

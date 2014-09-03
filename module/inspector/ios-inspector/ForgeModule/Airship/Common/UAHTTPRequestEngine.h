@@ -1,6 +1,6 @@
 
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -112,7 +112,7 @@ typedef void (^UAHTTPRequestEngineFailureBlock)(UAHTTPRequest *request, NSUInteg
 /**
  * The operation queue used for running registrations.
  */
-@property(nonatomic, readonly, retain) NSOperationQueue *queue;
+@property(nonatomic, readonly, strong) NSOperationQueue *queue;
 
 
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -32,15 +32,20 @@
 #import "UAPushSettingsTagsViewController.h"
 #import "UAPushSettingsSoundsViewController.h"
 #import "UAPushSettingsUserInfoViewController.h"
+#import "UAPushSettingsChannelInfoViewController.h"
 #import "UALocationSettingsViewController.h"
 #import "UAUser.h"
+
+#define kUAPushDeviceTokenPath @"deviceToken"
+#define kUAPushChannelIDPath @"channelID"
 
 enum {
     SectionDeviceToken = 0,
     SectionUser        = 1,
     SectionHelp        = 2,
     SectionLocation    = 3,
-    SectionCount       = 4
+    SectionChannel     = 4,
+    SectionCount       = 5
 };
 
 enum {
@@ -59,37 +64,14 @@ enum {
 
 static NSUInteger locationRowCount = 1;
 static NSUInteger userRowCount = 1;
+static NSUInteger channelRowCount = 1;
 
 @implementation UAPushMoreSettingsViewController
 
 - (void)dealloc {
-    [[UAPush shared] removeObserver:self];
-
-    self.deviceTokenCell = nil;
-    self.deviceTokenTypesCell = nil;
-
-    self.deviceTokenDisabledTypesCell = nil;
-    self.deviceTokenAliasCell = nil;
-    self.deviceTokenTagsCell = nil;
-
-    self.usernameCell = nil;
-    
-    self.helpSoundsCell = nil;
-    self.helpLogCell = nil;
-    
-    self.footerImageView = nil;
-    self.tableView = nil;
-
-    self.tokenViewController = nil;
-    self.aliasViewController = nil;
-    self.tagsViewController = nil;
-    self.userInfoViewController = nil;
-    self.locationCell = nil;
 
     [[NSNotificationCenter defaultCenter] removeObserver:self.userCreatedObserver name:UAUserCreatedNotification object:nil];
-    self.userCreatedObserver = nil;
     
-    [super dealloc];
 }
 
 - (void)viewDidLoad {
@@ -97,18 +79,16 @@ static NSUInteger userRowCount = 1;
 
     self.title = @"Push Notification Demo";
 
-    self.navigationItem.backBarButtonItem = [[[UIBarButtonItem alloc]
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc]
                                               initWithTitle:@"Back"
                                               style:UIBarButtonItemStyleBordered
                                               target:nil
-                                              action:nil]
-                                             autorelease];
+                                              action:nil];
 
-    self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc]
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]
                                               initWithBarButtonSystemItem:UIBarButtonSystemItemDone
                                               target:self
-                                              action:@selector(quit)]
-                                             autorelease];
+                                              action:@selector(quit)];
 
     // make our existing layout work beyond iOS6
     if ([self respondsToSelector:NSSelectorFromString(@"edgesForExtendedLayout")]) {
@@ -117,17 +97,28 @@ static NSUInteger userRowCount = 1;
 
     [self initCells];
 
-    [[UAPush shared] addObserver:self];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-    
+    [super viewWillAppear:animated];
+
+    [[UAPush shared] addObserver:self forKeyPath:kUAPushDeviceTokenPath options:NSKeyValueObservingOptionNew context:nil];
+    [[UAPush shared] addObserver:self forKeyPath:kUAPushChannelIDPath options:NSKeyValueObservingOptionNew context:nil];
+
     [self updateCellValues];
-    
-    [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:animated];
+    UITableView *strongTableView = self.tableView;
+    [strongTableView deselectRowAtIndexPath:[strongTableView indexPathForSelectedRow] animated:animated];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:NO];
+    [[UAPush shared] removeObserver:self forKeyPath:kUAPushDeviceTokenPath];
+    [[UAPush shared] removeObserver:self forKeyPath:kUAPushChannelIDPath];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+
     [self.tableView flashScrollIndicators];
 }
 
@@ -146,6 +137,7 @@ static NSUInteger userRowCount = 1;
     self.helpSoundsCell = nil;
     self.helpLogCell = nil;
     self.locationCell = nil;
+    self.channelCell = nil;
 
     self.footerImageView = nil;
     self.tableView = nil;
@@ -155,28 +147,33 @@ static NSUInteger userRowCount = 1;
 #pragma mark -
 
 - (void)initCells {
-    self.deviceTokenCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.deviceTokenCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.deviceTokenCell.textLabel.text = @"Device Token";
     self.deviceTokenCell.accessibilityLabel = @"Device Token";
     self.deviceTokenCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    self.deviceTokenTypesCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.deviceTokenTypesCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.deviceTokenTypesCell.textLabel.text = @"Notification Types";
 
-    self.deviceTokenDisabledTypesCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.deviceTokenDisabledTypesCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.deviceTokenDisabledTypesCell.textLabel.text = @"Disabled Notification Types";
     
-    self.deviceTokenAliasCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.deviceTokenAliasCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.deviceTokenAliasCell.textLabel.text = @"Alias";
     self.deviceTokenAliasCell.accessibilityLabel = @"Alias";
     self.deviceTokenAliasCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    self.deviceTokenTagsCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.deviceTokenTagsCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.deviceTokenTagsCell.textLabel.text = @"Tags";
     self.deviceTokenTagsCell.accessibilityLabel = @"Tags";
     self.deviceTokenTagsCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 
-    self.usernameCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil] autorelease];
+    self.channelCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
+    self.channelCell.textLabel.text = @"Channel ID";
+    self.channelCell.accessibilityLabel = @"Channel ID";
+    self.channelCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+
+    self.usernameCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     self.usernameCell.textLabel.text = @"Username";
     self.usernameCell.accessibilityLabel = @"Username";
     self.usernameCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
@@ -192,15 +189,15 @@ static NSUInteger userRowCount = 1;
         }];
     }
 
-    self.helpSoundsCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+    self.helpSoundsCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     self.helpSoundsCell.textLabel.text = @"Notification Sounds";
     self.helpSoundsCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 
-    self.helpLogCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+    self.helpLogCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     self.helpLogCell.textLabel.text = @"Device Log";
     self.helpLogCell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    self.locationCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+    self.locationCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     self.locationCell.textLabel.text = @"Location";
     
     [self updateCellValues];
@@ -224,9 +221,11 @@ static NSUInteger userRowCount = 1;
         case SectionHelp:
             return HelpSectionRowCount;
         case SectionLocation:
-            return locationRowCount;
+            return (NSInteger)locationRowCount;
         case SectionUser:
-            return userRowCount;
+            return (NSInteger)userRowCount;
+        case SectionChannel:
+            return (NSInteger)channelRowCount;
         default:
             break;
     }
@@ -244,6 +243,8 @@ static NSUInteger userRowCount = 1;
             return @"Location";
         case SectionUser:
             return @"User Info";
+        case SectionChannel:
+            return @"Channel Info";
         default:
             break;
     }
@@ -274,6 +275,8 @@ static NSUInteger userRowCount = 1;
                 break;
         }
         
+    } else if (indexPath.section == SectionChannel) {
+        cell = self.channelCell;
     } else if (indexPath.section == SectionUser) {
         cell = self.usernameCell ;
     } else if (indexPath.section == SectionHelp) {
@@ -287,7 +290,7 @@ static NSUInteger userRowCount = 1;
     }
 
     if (!cell) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     }
     return cell;
 }
@@ -300,78 +303,93 @@ static NSUInteger userRowCount = 1;
 }
 
 - (void)tableView:(UITableView *)view didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableView *strongTableView = self.tableView;
+
     if (indexPath.section == SectionDeviceToken) {
         if (indexPath.row == DeviceTokenSectionTokenCell) {
             if (!self.tokenViewController) {
-                self.tokenViewController = [[[UAPushSettingsTokenViewController alloc]
-                                       initWithNibName:@"UAPushSettingsTokenView" bundle:nil] autorelease];
+                self.tokenViewController = [[UAPushSettingsTokenViewController alloc]
+                                       initWithNibName:@"UAPushSettingsTokenView" bundle:nil];
             }
             [self.navigationController pushViewController:self.tokenViewController animated:YES];
         } else if (indexPath.row == DeviceTokenSectionAliasCell) {
             if (!self.aliasViewController) {
-                self.aliasViewController = [[[UAPushSettingsAliasViewController alloc]
-                                       initWithNibName:@"UAPushSettingsAliasView" bundle:nil] autorelease];
+                self.aliasViewController = [[UAPushSettingsAliasViewController alloc]
+                                       initWithNibName:@"UAPushSettingsAliasView" bundle:nil];
             }
             [self.navigationController pushViewController:self.aliasViewController animated:YES];
             
         } else if (indexPath.row == DeviceTokenSectionTagsCell) {
             if (!self.tagsViewController) {
-                self.tagsViewController = [[[UAPushSettingsTagsViewController alloc]
-                                      initWithNibName:@"UAPushSettingsTagsViewController" bundle:nil] autorelease];
+                self.tagsViewController = [[UAPushSettingsTagsViewController alloc]
+                                      initWithNibName:@"UAPushSettingsTagsViewController" bundle:nil];
             }
             [self.navigationController pushViewController:self.tagsViewController animated:YES];
             
         } else {
-            [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+            [strongTableView deselectRowAtIndexPath:indexPath animated:YES];
         }
+    } else if (indexPath.section == SectionChannel) {
+        if (!self.channelInfoViewController ) {
+            self.channelInfoViewController = [[UAPushSettingsChannelInfoViewController alloc]
+                                              initWithNibName:@"UAPushSettingsChannelInfoViewController" bundle:nil];
+        }
+        [self.navigationController pushViewController:self.channelInfoViewController animated:YES];
     } else if (indexPath.section == SectionUser) {
         if (!self.userInfoViewController ) {
-            self.userInfoViewController = [[[UAPushSettingsUserInfoViewController alloc] initWithNibName:@"UAPushSettingsUserInfoView" bundle:nil] autorelease];
+            self.userInfoViewController = [[UAPushSettingsUserInfoViewController alloc] initWithNibName:@"UAPushSettingsUserInfoView" bundle:nil];
         }
         [self.navigationController pushViewController:self.userInfoViewController animated:YES];
     } else if (indexPath.section == SectionHelp) {
         if (indexPath.row == HelpSectionSounds) {
-            UAPushSettingsSoundsViewController *soundsViewController = [[[UAPushSettingsSoundsViewController alloc] 
-                                                                         initWithNibName:@"UAPushSettingsSoundsViewController" bundle:nil] autorelease];
+            UAPushSettingsSoundsViewController *soundsViewController = [[UAPushSettingsSoundsViewController alloc] 
+                                                                         initWithNibName:@"UAPushSettingsSoundsViewController" bundle:nil];
             [self.navigationController pushViewController:soundsViewController animated:YES];
         } else {
-            [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+            [strongTableView deselectRowAtIndexPath:indexPath animated:YES];
         }
         
 
     } else if(indexPath.section == SectionLocation) {
-        UALocationSettingsViewController* locationViewController = [[[UALocationSettingsViewController alloc] 
+        UALocationSettingsViewController* locationViewController = [[UALocationSettingsViewController alloc] 
                                                                      initWithNibName:@"UALocationSettingsViewController" 
-                                                                     bundle:nil] autorelease];
+                                                                     bundle:nil];
         [self.navigationController pushViewController:locationViewController animated:YES];
-        [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+        [strongTableView deselectRowAtIndexPath:indexPath animated:YES];
     }
     else {
-        [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+        [strongTableView deselectRowAtIndexPath:indexPath animated:YES];
     }
 
 }
 
 #pragma mark -
-#pragma mark UA Registration Observer methods
+#pragma mark KVO methods
 
-- (void)registerDeviceTokenSucceeded {
-    
-    [self updateCellValues];
-    
-    [self.deviceTokenCell setNeedsLayout];
-    [self.deviceTokenTypesCell setNeedsLayout];
-    [self.deviceTokenDisabledTypesCell setNeedsLayout];
-    [self.deviceTokenAliasCell setNeedsLayout];
-    [self.deviceTokenTagsCell setNeedsLayout];
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context {
+    if ([keyPath isEqualToString:kUAPushDeviceTokenPath] || [keyPath isEqualToString:kUAPushChannelIDPath]) {
+        [self updateCellValues];
+
+        [self.deviceTokenCell setNeedsLayout];
+        [self.deviceTokenTypesCell setNeedsLayout];
+        [self.deviceTokenDisabledTypesCell setNeedsLayout];
+        [self.deviceTokenAliasCell setNeedsLayout];
+        [self.deviceTokenTagsCell setNeedsLayout];
+        [self.channelCell setNeedsLayout];
+    }
 }
+
 
 - (void)updateCellValues {
     
-    self.deviceTokenCell.detailTextLabel.text = [UAirship shared].deviceToken ? [UAirship shared].deviceToken : @"Unavailable";
-    self.deviceTokenTypesCell.detailTextLabel.text = [self pushTypeString:[[UIApplication sharedApplication] enabledRemoteNotificationTypes]];
+    self.deviceTokenCell.detailTextLabel.text = [UAPush shared].deviceToken ? [UAPush shared].deviceToken : @"Unavailable";
+
+    NSUInteger types = [UAPush currentEnabledNotificationTypes];
+    self.deviceTokenTypesCell.detailTextLabel.text = [self pushTypeString:types];
     
-    UIRemoteNotificationType disabledTypes = [[UIApplication sharedApplication] enabledRemoteNotificationTypes] ^ [UAPush shared].notificationTypes;
+    UIRemoteNotificationType disabledTypes = types ^ [UAPush shared].notificationTypes;
     self.deviceTokenDisabledTypesCell.detailTextLabel.text = [self pushTypeString:disabledTypes];
     
     self.deviceTokenAliasCell.detailTextLabel.text = [UAPush shared].alias ? [UAPush shared].alias : @"Not Set";
@@ -382,6 +400,7 @@ static NSUInteger userRowCount = 1;
         self.deviceTokenTagsCell.detailTextLabel.text = @"None";
     }
 
+    self.channelCell.detailTextLabel.text = [UAPush shared].channelID ? [UAPush shared].channelID : @"Unavailable";
     self.usernameCell.detailTextLabel.text = [UAUser defaultUser].username ?: @"Unavailable";
 }
 

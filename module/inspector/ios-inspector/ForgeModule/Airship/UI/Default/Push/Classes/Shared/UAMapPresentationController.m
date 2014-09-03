@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -33,15 +33,6 @@
 #pragma mark -
 #pragma mark Memory
 
-- (void) dealloc {
-    self.locationService = nil;
-    self.locations = nil;
-    self.annotations = nil;
-    self.lastUserAnnotation = nil;
-    self.mapView = nil;
-    self.rightButton = nil;
-    [super dealloc];
-}
 
 
 #pragma mark -
@@ -103,10 +94,11 @@
 
 - (IBAction)rightBarButtonPressed:(id)sender {
     UA_LDEBUG(@"Right bar button pressed");
-    // The Map                   
-    if (self.mapView.annotations.count > 1) {
+    // The Map
+    MKMapView *strongMapView = self.mapView;
+    if (strongMapView.annotations.count > 1) {
         UA_LDEBUG(@"Removing annotations");
-        [self.mapView removeAnnotations:self.annotations];
+        [strongMapView removeAnnotations:self.annotations];
         self.rightButton.title = @"+Pin";
     }
     else {
@@ -138,7 +130,7 @@
     MKPinAnnotationView *pinView = [[MKPinAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:nil];
     pinView.pinColor = MKPinAnnotationColorPurple;
     pinView.animatesDrop = YES;
-    return [pinView autorelease];
+    return pinView;
 }
 
 - (void)mapView:(MKMapView *)mapView didAddAnnotationViews:(NSArray *)views {

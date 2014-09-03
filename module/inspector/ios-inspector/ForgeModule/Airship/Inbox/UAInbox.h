@@ -1,5 +1,5 @@
 /*
-Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @class UAInboxMessageList;
 @class UAInboxPushHandler;
+@class UAInboxAPIClient;
 
 #define INBOX_UI_CLASS @"UAInboxUI"
 
@@ -67,7 +68,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Rich Push messages.
  *
  * UAInboxDefaultJSDelegate is a reference implementation of this protocol.
+ *
+ * @deprecated As of version 3.2. Replaced with UAJavaScriptDelegate.
  */
+__attribute__((deprecated("As of version 3.2")))
 @protocol UAInboxJavaScriptDelegate <NSObject>
 
 /**
@@ -150,39 +154,31 @@ SINGLETON_INTERFACE(UAInbox);
  */
 + (void)land;
 
-@property (nonatomic, assign) UAInboxMessageList *messageList;
-@property (nonatomic, retain) UAInboxPushHandler *pushHandler;
+/**
+ * The list of Rich Push Inbox messages.
+ */
+@property (nonatomic, strong) UAInboxMessageList *messageList;
 
 /**
- * The Javascript delegate.
+ * Handles incoming rich push messages.
+ */
+@property (nonatomic, strong) UAInboxPushHandler *pushHandler;
+
+/**
+ * The Inbox API Client
+ */
+@property (nonatomic, readonly, strong) UAInboxAPIClient *client;
+
+
+/**
+ * The user-configurable JavaScript delegate, implementing
+ * the deprecated UAInboxJavaScriptDelegate protocol.
  * 
  * NOTE: this delegate is not retained.
  */
-@property (nonatomic, assign) id<UAInboxJavaScriptDelegate> jsDelegate;
-
-///---------------------------------------------------------------------------------------
-/// @name URL Caches
-///---------------------------------------------------------------------------------------
-
-/**
- * Determines whether the contents of Rich Push messges should be cached
- * using the custom Inbox-specific URL cache. If set to YES, message contents will be
- * aggressively persisted to disk and available for offline viewing.
- *
- * Defaults to YES.
- */
-@property(nonatomic, assign) BOOL shouldUseInboxCache;
-
-/**
- * The default URL Cache ([NSURLCache sharedURLCache]).
- * This is saved prior to switching the URL Cache to the inboxCache.
- */
-@property(retain) NSURLCache *clientCache;
-
-/**
- * An Inbox-specific URL cache used to cache the contents of 
- * Rich Push messages for offline viewing.
- */
-@property(retain) NSURLCache *inboxCache;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+@property (nonatomic, weak) id<UAInboxJavaScriptDelegate> jsDelegate;
+#pragma clang diagnostic pop
 
 @end

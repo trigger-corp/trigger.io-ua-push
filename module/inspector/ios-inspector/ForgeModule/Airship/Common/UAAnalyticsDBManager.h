@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -33,14 +33,14 @@
     dispatch_queue_t dbQueue;
 }
 
-@property (nonatomic, retain) UASQLite *db;
+@property (nonatomic, strong) UASQLite *db;
 
 SINGLETON_INTERFACE(UAAnalyticsDBManager);
 
 - (void)resetDB;
 
 - (void)addEvent:(UAEvent *)event withSession:(NSDictionary *)session;
-- (NSArray *)getEvents:(int)max;
+- (NSArray *)getEvents:(NSUInteger)max;
 - (NSArray *)getEventByEventId:(NSString *)event_id;
 
 - (void)deleteEvent:(NSNumber *)eventId;
@@ -48,7 +48,7 @@ SINGLETON_INTERFACE(UAAnalyticsDBManager);
 - (void)deleteBySessionId:(NSString *)sessionId;
 - (void)deleteOldestSession;
 
-- (NSInteger)eventCount;
-- (NSInteger)sizeInBytes;
+- (NSUInteger)eventCount;
+- (NSUInteger)sizeInBytes;
 
 @end

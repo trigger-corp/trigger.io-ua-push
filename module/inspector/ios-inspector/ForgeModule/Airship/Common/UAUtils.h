@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -64,12 +64,6 @@
 + (NSString *)deviceID;
 
 ///---------------------------------------------------------------------------------------
-/// @name URL Encoding
-///---------------------------------------------------------------------------------------
-
-+ (NSString *)urlEncodedStringWithString:(NSString *)string encoding:(NSStringEncoding)encoding;
-
-///---------------------------------------------------------------------------------------
 /// @name UAHTTP Authenticated Request Helpers
 ///---------------------------------------------------------------------------------------
 
@@ -87,6 +81,16 @@
  * @return An HTTP Basic Auth header string value for the user's credentials.
  */
 + (NSString *)userAuthHeaderString;
+
+
+/**
+ * Returns a basic auth header string.
+ *
+ * The return value takes the form of: `Basic [Base64 Encoded "username:password"]`
+ *
+ * @return An HTTP Basic Auth header string value for the app's credentials.
+ */
++ (NSString *)appAuthHeaderString;
 
 ///---------------------------------------------------------------------------------------
 /// @name UI Formatting Helpers
@@ -110,5 +114,18 @@
  * @return A DateFormatter with the default attributes.
  */
 + (NSDateFormatter *)ISODateFormatterUTC;
+
+///---------------------------------------------------------------------------------------
+/// @name File management
+///---------------------------------------------------------------------------------------
+
+/**
+ * Sets a file or directory at a url to not backup in
+ * iCloud or iTunes
+ * @param url The items url
+ * @return YES if successful, NO otherwise
+ */
++ (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)url;
+
 
 @end

@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -35,12 +35,15 @@
 
 @interface UAPushSettingsAddTagViewController : UIViewController
 
-@property (nonatomic, assign) id<UAPushSettingsAddTagDelegate> tagDelegate;
-@property (nonatomic, retain) UIBarButtonItem *cancelButton;
-@property (nonatomic, retain) UIBarButtonItem *saveButton;
-@property (nonatomic, retain) IBOutlet UITableView *tableView;
-@property (nonatomic, retain) IBOutlet UITableViewCell *tagCell;
-@property (nonatomic, retain) IBOutlet UITextField *tagField;
-@property (nonatomic, retain) NSArray *presetTags;
+@property (nonatomic, weak) id<UAPushSettingsAddTagDelegate> tagDelegate;
+@property (nonatomic, strong) UIBarButtonItem *cancelButton;
+@property (nonatomic, strong) UIBarButtonItem *saveButton;
+@property (nonatomic, weak) IBOutlet UITableView *tableView;
+
+// The tagCell IBOutlet needs to be strong because it has to be re-created and
+// added back to the view for iOS 6.
+@property (nonatomic, strong) IBOutlet UITableViewCell *tagCell;
+@property (nonatomic, weak) IBOutlet UITextField *tagField;
+@property (nonatomic, strong) NSArray *presetTags;
 
 @end

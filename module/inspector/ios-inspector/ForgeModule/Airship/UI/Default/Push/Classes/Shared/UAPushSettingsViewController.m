@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -62,25 +62,6 @@ enum {
 #pragma mark -
 #pragma mark Lifecycle methods
 
-- (void)dealloc {
-
-    self.pushEnabledSwitch = nil;
-    self.pushEnabledLabel = nil;
-    self.pushEnabledCell = nil;
-    
-    self.quietTimeSwitch = nil;
-    self.quietTimeLabel = nil;
-    self.quietTimeEnabledCell = nil;
-    self.toCell = nil;
-    self.fromCell = nil;
-    
-    self.tableView = nil;
-    self.datePicker = nil;
-    self.airshipLocationEnabledSwitch = nil;
-    self.airshipLocationEnabledLabel = nil;
-    self.airshipLocationEnabledCell = nil;
-    [super dealloc];
-}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -118,7 +99,7 @@ enum {
     [super viewWillAppear:animated];
 }
 
-- (void) willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     
     //if shown, update picker and scroll offset
     if (self.pickerDisplayed) {
@@ -142,12 +123,14 @@ enum {
         case SectionPushEnabled:
             return PushEnabledSectionRowCount;
         case SectionAirshipLocationEnabled:
-            return AirshipLocationEnabledSectionRowCount;
+            return (NSInteger)AirshipLocationEnabledSectionRowCount;
         case SectionQuietTime:
         {
-            if (self.pushEnabledSwitch.on && self.quietTimeSwitch.on) {
+            UISwitch *strongPushEnabledSwitch = self.pushEnabledSwitch;
+
+            if (strongPushEnabledSwitch.on && self.quietTimeSwitch.on) {
                 return QuietTimeSectionRowCount;
-            } else if (self.pushEnabledSwitch.on) {
+            } else if (strongPushEnabledSwitch.on) {
                 return 1;
             }
         }
@@ -191,38 +174,41 @@ enum {
 
 - (void)initViews {
     self.title = UA_PU_TR(@"UA_Push_Settings_Title");
-    self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
                                                                                             target:self
-                                                                                            action:@selector(quit)]
-                                              autorelease];
+                                                                                            action:@selector(quit)];
 
-    UIRemoteNotificationType type = [[UIApplication sharedApplication] enabledRemoteNotificationTypes];
-    if (type == UIRemoteNotificationTypeNone || ![UAPush shared].pushEnabled) {
-        self.pushEnabledSwitch.on = NO;
+    NSUInteger types = [UAPush currentEnabledNotificationTypes];
+    UISwitch *strongPushEnabledSwitch = self.pushEnabledSwitch;
+
+    if (types == UIRemoteNotificationTypeNone || ![UAPush shared].pushEnabled) {
+        strongPushEnabledSwitch.on = NO;
     } else {
-        self.pushEnabledSwitch.on = YES;
+        strongPushEnabledSwitch.on = YES;
     }
+
+    UISwitch *strongAirshipLocationEnabledSwitch = self.airshipLocationEnabledSwitch;
     if ([UALocationService airshipLocationServiceEnabled]) {
-        self.airshipLocationEnabledSwitch.on = YES;
+        strongAirshipLocationEnabledSwitch.on = YES;
     }
     else {
-        self.airshipLocationEnabledSwitch.on = NO;
+        strongAirshipLocationEnabledSwitch.on = NO;
     }
     
     self.pushEnabledLabel.text = UA_PU_TR(@"UA_Push_Settings_Enabled_Label");
     self.airshipLocationEnabledLabel.text = UA_PU_TR(@"UA_Push_Settings_Location_Enabled_Label");
     self.quietTimeLabel.text = UA_PU_TR(@"UA_Push_Settings_Quiet_Time_Label");
     
-    self.fromCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil] autorelease];
-    self.toCell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil] autorelease];
+    self.fromCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
+    self.toCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
     self.fromCell.textLabel.text = UA_PU_TR(@"UA_Quiet_Time_From");
     self.toCell.textLabel.text = UA_PU_TR(@"UA_Quiet_Time_To");
 
     
     NSDate *date1 = nil;
     NSDate *date2 = nil;
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    [formatter setLocale:[[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease]];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
     
     
     NSDictionary *quietTime = [[UAPush shared] quietTime];
@@ -247,12 +233,16 @@ enum {
 
     NSDate *now = [[NSDate alloc] init];
     [self.datePicker setDate:now animated:NO];
-    [now release];
 
     self.pickerDisplayed = NO;
     self.pickerShownFrame = CGRectZero;
     self.pickerHiddenFrame = CGRectZero;
-    
+
+    // make our existing layout work in iOS7
+    if ([self respondsToSelector:NSSelectorFromString(@"edgesForExtendedLayout")]) {
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+    }
+
     [self.view setNeedsLayout];
 }
 
@@ -264,6 +254,7 @@ enum {
     //Older  devies do not like the custom size. It breaks the picker.
                     
     //If the picker is in a portrait container, use std portrait picker dims
+
     if (viewBounds.size.height >= viewBounds.size.width) {
         self.datePicker.bounds = CGRectMake(0, 0, 320, 216);
     } else {
@@ -294,10 +285,11 @@ enum {
 - (IBAction)quit {
     
     if (self.dirty) {
+        UISwitch *strongPushEnabledSwitch = self.pushEnabledSwitch;
+
+        [UAPush shared].pushEnabled = strongPushEnabledSwitch.on;
         
-        [UAPush shared].pushEnabled = self.pushEnabledSwitch.on;
-        
-        if (self.pushEnabledSwitch.on) {
+        if (strongPushEnabledSwitch.on) {
             [self updateQuietTime];
         }
         
@@ -310,13 +302,13 @@ enum {
 - (IBAction)pickerValueChanged:(id)sender {
 
     self.dirty = YES;
-    
+
     NSDate *date = [self.datePicker date];
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateStyle:NSDateFormatterNoStyle];
     [formatter setTimeStyle:NSDateFormatterShortStyle];
     
-    int row = [[self.tableView indexPathForSelectedRow] row];
+    NSInteger row = (NSInteger)[[self.tableView indexPathForSelectedRow] row];
     if (row == QuietTimeSectionStartCell) {
         self.fromCell.detailTextLabel.text = [formatter stringFromDate:date];
         [self.fromCell setNeedsLayout];
@@ -326,7 +318,6 @@ enum {
     } else {
         NSDate *now = [[NSDate alloc] init];
         [self.datePicker setDate:now animated:YES];
-        [now release];
         return;
     }
 
@@ -356,6 +347,9 @@ enum {
     
     [UIView beginAnimations:nil context:nil];
     [UIView setAnimationDuration:0.4];
+
+    UITableView *strongTableView = self.tableView;
+
     if (show) {
         [self.view addSubview:self.datePicker];
         self.pickerDisplayed = YES;
@@ -365,14 +359,14 @@ enum {
         int scrollOffset = MAX(0, 
                                self.toCell.frame.origin.y
                                + self.toCell.frame.size.height
-                               + self.tableView.sectionFooterHeight
+                               + strongTableView.sectionFooterHeight
                                - self.datePicker.frame.origin.y);
-        self.tableView.contentOffset = CGPointMake(0, scrollOffset);
+        strongTableView.contentOffset = CGPointMake(0, scrollOffset);
     } else {
         self.pickerDisplayed = NO;
-        self.tableView.contentOffset = CGPointZero;//reset scroll offset
+        strongTableView.contentOffset = CGPointZero;//reset scroll offset
         self.datePicker.frame = self.pickerHiddenFrame;
-        [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:NO];
+        [strongTableView deselectRowAtIndexPath:[strongTableView indexPathForSelectedRow] animated:NO];
     }
     [UIView commitAnimations];
     
@@ -381,14 +375,14 @@ enum {
         [self.datePicker removeFromSuperview];
     }
 
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateStyle:NSDateFormatterNoStyle];
     [formatter setTimeStyle:NSDateFormatterShortStyle];
     
     NSString *fromString = self.fromCell.detailTextLabel.text;
     NSString *toString = self.toCell.detailTextLabel.text;
 
-    int row = [[self.tableView indexPathForSelectedRow] row];
+    NSUInteger row = (NSUInteger)[[strongTableView indexPathForSelectedRow] row];
     if (row == 1 && [fromString length] != 0) {
         NSDate *fromDate = [formatter dateFromString:fromString];
         [self.datePicker setDate:fromDate animated:YES];
@@ -402,7 +396,7 @@ enum {
     
     if (self.quietTimeSwitch.on) {
         
-        NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateStyle:NSDateFormatterNoStyle];
         [formatter setTimeStyle:NSDateFormatterShortStyle];
         

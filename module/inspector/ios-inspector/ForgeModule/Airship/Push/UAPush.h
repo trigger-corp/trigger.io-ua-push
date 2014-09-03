@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -26,6 +26,49 @@
 #import "UAGlobal.h"
 #import "UAObservable.h"
 #import "UAHTTPConnection.h"
+#import "UADeviceRegistrar.h"
+
+
+//---------------------------------------------------------------------------------------
+// UARegistrationDelegate
+//---------------------------------------------------------------------------------------
+
+/**
+ * Implement this protocol and add as a [UAPush registrationDelegate] to receive
+ * registration success and failure callbacks.
+ *
+ */
+@protocol UARegistrationDelegate <NSObject>
+@optional
+
+/**
+ * Called when the device channel and/or device token successfully registers with
+ * Urban Airship.  Successful registrations could be disabling push, enabling push,
+ * or updating the device registration settings.
+ *
+ * A nil channel id indicates the channel creation failed and the old device token
+ * registration is being used.
+ *
+ * The device token will only be available once the application successfully
+ * registers with APNS.
+ *
+ * When registration finishes in the background, any async tasks that are triggered
+ * from this call should request a background task.
+ * @param channelID The channel ID string.
+ * @param deviceToken The device token string.
+ */
+- (void)registrationSucceededForChannelID:(NSString *)channelID deviceToken:(NSString *)deviceToken;
+
+/**
+ * Called when the device channel and/or device token failed to register with
+ * Urban Airship.
+ *
+ * When registration finishes in the background, any async tasks that are triggered
+ * from this call should request a background task.
+ */
+- (void)registrationFailed;
+
+@end
 
 //---------------------------------------------------------------------------------------
 // UAPushUIProtocol Protocol
@@ -86,7 +129,6 @@
  */
 - (void)playNotificationSound:(NSString *)soundFilename;
 
-
 /**
  * Called when a push notification is received in the foreground with a badge number.
  * @param badgeNumber The badge number to display
@@ -95,57 +137,57 @@
 
 /**
  * Called when a push notification is received while the app is running in the foreground.
+ * Overridden by receivedForegroundNotification:fetchCompletionHandler.
  *
  * @param notification The notification dictionary.
  */
 - (void)receivedForegroundNotification:(NSDictionary *)notification;
 
+/**
+ * Called when a push notification is received while the app is running in the foreground 
+ * for applications with the "remote-notification" background mode.
+ *
+ * @param notification The notification dictionary.
+ * @param completionHandler Should be called with a UIBackgroundFetchResult as soon as possible, so the system can accurately estimate its power and data cost.
+ */
+- (void)receivedForegroundNotification:(NSDictionary *)notification fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+
+/**
+ * Called when a push notification is received while the app is running in the background
+ * for applications with the "remote-notification" background mode.  
+ * Overridden by receivedBackgroundNotification:fetchCompletionHandler.
+ *
+ * @param notification The notification dictionary.
+ */
+- (void)receivedBackgroundNotification:(NSDictionary *)notification;
+
+/**
+ * Called when a push notification is received while the app is running in the background
+ * for applications with the "remote-notification" background mode.
+ *
+ * @param notification The notification dictionary.
+ * @param completionHandler Should be called with a UIBackgroundFetchResult as soon as possible, so the system can accurately estimate its power and data cost.
+ */
+- (void)receivedBackgroundNotification:(NSDictionary *)notification fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 
 /**
  * Called when the app is started or resumed because a user opened a notification.
+ * Overridden by launchedFromNotification:fetchCompletionHandler.
  *
  * @param notification The notification dictionary.
  */
 - (void)launchedFromNotification:(NSDictionary *)notification;
-@end
-
-
-//---------------------------------------------------------------------------------------
-// UARegistrationObserver Protocol
-//---------------------------------------------------------------------------------------
 
 /**
- * Implement this protocol and register with the UAPush shared instance to receive
- * device token registration success and failure callbacks.
- */
-@protocol UARegistrationObserver
-@optional
-
-/**
- * Called when the device token is successfully registered with Urban Airship.
- */
-- (void)registerDeviceTokenSucceeded;
-
-/**
- * Called when the device token registration fails.
+ * Called when the app is started or resumed because a user opened a notification
+ * for applications with the "remote-notification" background mode.
  *
- * @param request The failed request.
+ * @param notification The notification dictionary.
+ * @param completionHandler Should be called with a UIBackgroundFetchResult as soon as possible, so the system can accurately estimate its power and data cost.
  */
-- (void)registerDeviceTokenFailed:(UAHTTPRequest *)request;
+- (void)launchedFromNotification:(NSDictionary *)notification fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
 
-/**
- * Called when the device token is successfully deactivated with Urban Airship.
- */
-- (void)unregisterDeviceTokenSucceeded;
-
-/**
- * Called when the device token deactivation fails and cannot be retried.
- *
- * @param request The failed request.
- */
-- (void)unregisterDeviceTokenFailed:(UAHTTPRequest *)request;
 @end
-
 
 
 //---------------------------------------------------------------------------------------
@@ -155,8 +197,8 @@
 /**
  * This singleton provides an interface to the functionality provided by the Urban Airship iOS Push API.
  */
-@interface UAPush : UAObservable
-
+#pragma clang diagnostic push
+@interface UAPush : NSObject <UADeviceRegistrarDelegate>
 
 SINGLETON_INTERFACE(UAPush);
 
@@ -217,6 +259,11 @@ SINGLETON_INTERFACE(UAPush);
 @property (nonatomic, copy, readonly) NSString *deviceToken;
 
 /**
+ * The channel id for this device.
+ */
+@property (nonatomic, copy, readonly) NSString *channelID;
+
+/**
  * Notification types this app will request from APNS. If push is enabled, changes to this value will
  * take effect the next time the app registers with [UAPush registerForRemoteNotifications].
  *
@@ -228,8 +275,25 @@ SINGLETON_INTERFACE(UAPush);
  * Set a delegate that implements the UAPushNotificationDelegate protocol. If not
  * set, a default implementation is provided (UAPushNotificationHandler).
  */
-@property (nonatomic, assign) id<UAPushNotificationDelegate> delegate;
+@property (nonatomic, weak) id<UAPushNotificationDelegate> pushNotificationDelegate;
 
+/**
+ * Set a delegate that implements the UAPushNotificationDelegate protocol. If not
+ * set, a default implementation is provided (UAPushNotificationHandler).
+ *
+ * @deprecated As of version 3.0. Replaced with [UAPush pushNotificationDelegate] property.
+ */
+@property (nonatomic, weak) id<UAPushNotificationDelegate> delegate __attribute__((deprecated("As of version 3.0")));
+
+/**
+ * Set a delegate that implements the UARegistrationDelegate protocol.
+ */
+@property (nonatomic, weak) id<UARegistrationDelegate> registrationDelegate;
+
+/**
+ * Notification that launched the application
+ */
+@property (nonatomic, readonly, strong) NSDictionary *launchNotification;
 
 ///---------------------------------------------------------------------------------------
 /// @name Autobadge
@@ -334,9 +398,10 @@ SINGLETON_INTERFACE(UAPush);
 @property (nonatomic, copy, readonly) NSDictionary *quietTime;
 
 /**
- * Time Zone for quiet time.
+ * Time Zone for quiet time.  If the time zone is not set, the current
+ * local time zone is returned.
  */
-@property (nonatomic, retain) NSTimeZone *timeZone; /* getter = timeZone, setter = setTimeZone: */
+@property (nonatomic, strong) NSTimeZone *timeZone;
 
 /**
  * Enables/Disables quiet time
@@ -356,8 +421,29 @@ SINGLETON_INTERFACE(UAPush);
  * @param from Date for start of quiet time (HH:MM are used)
  * @param to Date for end of quiet time (HH:MM are used)
  * @param tz The time zone for the from and to dates
+ * @deprecated As of version 3.2.  Replaced with 
+ * setQuietTimeStartHour:startMinute:endHour:endMinute:
  */
 - (void)setQuietTimeFrom:(NSDate *)from to:(NSDate *)to withTimeZone:(NSTimeZone *)tz;
+
+/**
+ * Sets the quiet time start and end time.  The start and end time does not change
+ * if the time zone changes.  To set the time zone, see 'timeZone'.
+ *
+ * Update the server after making changes to the quiet time with the
+ * `updateRegistration` call. Batching these calls improves API and client performance.
+ *
+ * @warning This method does not automatically enable quiet time and does not
+ * automatically update the server. Please refer to `quietTimeEnabled` and 
+ * `updateRegistration` methods for more information.
+ *
+ * @param startHour Quiet time start hour. Only 0-23 is valid.
+ * @param startMinute Quiet time start minute. Only 0-59 is valid.
+ * @param endHour Quiet time end hour. Only 0-23 is valid.
+ * @param endMinute Quiet time end minute. Only 0-59 is valid.
+ */
+-(void)setQuietTimeStartHour:(NSUInteger)startHour startMinute:(NSUInteger)startMinute
+                     endHour:(NSUInteger)endHour endMinute:(NSUInteger)endMinute;
 
 
 ///---------------------------------------------------------------------------------------
@@ -375,7 +461,7 @@ SINGLETON_INTERFACE(UAPush);
  * - quiet time
  * - autobadge
  * 
- * Add a `UARegistrationObserver` to `UAPush` to receive success and failure callbacks.
+ * Add a `UARegistrationDelegate` to `UAPush` to received success and failure callbacks.
  *
  * @param token The device token to register.
  */
@@ -399,7 +485,7 @@ SINGLETON_INTERFACE(UAPush);
  * Registers or updates the current registration with an API call. If push notifications are
  * not enabled, this unregisters the device token.
  *
- * Register an implementation of `UARegistrationObserver` with `UAPush` to receive success and failure callbacks.
+ * Add a `UARegistrationDelegate` to `UAPush` to receive success and failure callbacks.
  */
 - (void)updateRegistration;
 
@@ -415,5 +501,21 @@ SINGLETON_INTERFACE(UAPush);
  * @param state The application state at the time the notification was received.
  */
 - (void)handleNotification:(NSDictionary *)notification applicationState:(UIApplicationState)state;
+
+/**
+ * Handle incoming push notifications. This method will record push conversions, parse the notification
+ * and call the appropriate methods on your delegate.
+ *
+ * @param notification The notification payload, as passed to your application delegate.
+ * @param state The application state at the time the notification was received.
+ * @param completionHandler Should be called with a UIBackgroundFetchResult as soon as possible, so the system can accurately estimate its power and data cost.
+ */
+- (void)handleNotification:(NSDictionary *)notification applicationState:(UIApplicationState)state fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler;
+
+
+/**
+ * Gets the current enabled notification types.
+ */
++ (NSUInteger)currentEnabledNotificationTypes;
 
 @end

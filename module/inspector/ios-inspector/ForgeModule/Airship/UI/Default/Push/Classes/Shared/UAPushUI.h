@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -34,9 +34,9 @@
 
 @interface UAPushUI : NSObject<UAPushUIProtocol>
 
-@property (nonatomic, retain) UIViewController *apnsSettingsViewController;
-@property (nonatomic, retain) UIViewController *tokenSettingsViewController;
-@property (nonatomic, retain) NSBundle *localizationBundle;
+@property (nonatomic, strong) UIViewController *apnsSettingsViewController;
+@property (nonatomic, strong) UIViewController *tokenSettingsViewController;
+@property (nonatomic, strong) NSBundle *localizationBundle;
 
 SINGLETON_INTERFACE(UAPushUI)
 

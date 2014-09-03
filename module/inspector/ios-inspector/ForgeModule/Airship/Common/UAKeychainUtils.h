@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -32,17 +32,46 @@
  */
 @interface UAKeychainUtils : NSObject
 
+/**
+ * Creates a key chain.
+ * @param username The username for the key chain.
+ * @param password The password for the key chain.
+ * @param identifier The identifier for the key chain.
+ * @return YES if the key chain was created successfully. NO otherwise.
+ */
 + (BOOL)createKeychainValueForUsername:(NSString *)username 
                           withPassword:(NSString *)password 
                          forIdentifier:(NSString *)identifier;
 
+/**
+ * Deletes a key chain.
+ * @param identifier The identifier to specify the key chain to be deleted.
+ */
 + (void)deleteKeychainValue:(NSString *)identifier;
 
+/**
+ * Updates a key chain.
+ * @param username The username for the key chain.
+ * @param password The password for the key chain.
+ * @param identifier The identifier for the key chain.
+ * @return YES if the key chain was updated successfully. NO otherwise.
+ */
 + (BOOL)updateKeychainValueForUsername:(NSString *)username
                           withPassword:(NSString *)password
                          forIdentifier:(NSString *)identifier;
 
+/**
+ * Get the key chain's password.
+ * @param identifier The identifier for the key chain.
+ * @return The password as an NSString or an empty string if an error occurred.
+ */
 + (NSString *)getPassword:(NSString *)identifier;
+
+/**
+ * Get the key chain's username.
+ * @param identifier The identifier for the key chain.
+ * @return The username as an NSString or an empty string if an error occurred.
+ */
 + (NSString *)getUsername:(NSString *)identifier;
 
 /**

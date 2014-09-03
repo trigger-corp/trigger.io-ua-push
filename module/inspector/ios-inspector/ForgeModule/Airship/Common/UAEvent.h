@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -24,25 +24,28 @@
  */
 
 
-#define kEventAppInitSize               450//397 w/ push id, no inbox id
-#define kEventAppExitSize               200//136 w/ only network type
-#define kEventDeviceRegistrationSize    200//153 w/ only user info
-#define kEventPushReceivedSize          200//160 w/ uuid push info
-#define kEventAppActiveSize             120
-#define kEventAppInactiveSize           120
+
+#define kEventAppInitSize               (NSUInteger) 450//397 w/ push id, no inbox id
+#define kEventAppExitSize               (NSUInteger) 200//136 w/ only network type
+
+#define kEventDeviceRegistrationSize    (NSUInteger) 200//153 w/ only user info
+#define kEventPushReceivedSize          (NSUInteger) 200//160 w/ uuid push info
+#define kEventAppActiveSize             (NSUInteger) 120
+#define kEventAppInactiveSize           (NSUInteger) 120
+
 
 @interface UAEvent : NSObject
 
 @property (nonatomic, readonly, copy) NSString *time;
 @property (nonatomic, readonly, copy) NSString *event_id;
-@property (nonatomic, readonly, retain) NSMutableDictionary *data;
+@property (nonatomic, readonly, strong) NSMutableDictionary *data;
 
 + (id)event;
 - (id)initWithContext:(NSDictionary *)context;
 + (id)eventWithContext:(NSDictionary *)context;
 - (NSString *)getType;
 - (void)gatherData:(NSDictionary *)context;
-- (int)getEstimatedSize;
+- (NSUInteger)getEstimatedSize;
 - (void)addDataFromSessionForKey:(NSString *)dataKey;
 - (void)addDataWithValue:(id)value forKey:(NSString *)key;
 @end

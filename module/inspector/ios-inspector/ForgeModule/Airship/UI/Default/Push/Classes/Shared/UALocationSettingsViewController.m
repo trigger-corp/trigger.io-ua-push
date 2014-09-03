@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -33,13 +33,6 @@
 
 @implementation UALocationSettingsViewController
 
-- (void)dealloc {
-    self.locationService = nil;
-    self.locationDisplay = nil;
-    self.reportedLocations = nil;
-    self.locationTableView = nil;
-    [super dealloc];
-}
 
 - (void)viewDidUnload {
     [self turnOffLocationDisplay];
@@ -84,13 +77,16 @@
 
 - (void)turnOffLocationDisplay {
     [self.locationDisplay removeObjectsInRange:NSMakeRange(1, ([self.locationDisplay count] -1))];
-    NSUInteger rows = [self.locationTableView numberOfRowsInSection:0];
+
+    UITableView *strongLocationTableView = self.locationTableView;
+    NSInteger rows = (NSInteger)[strongLocationTableView numberOfRowsInSection:0];
     NSMutableArray *arrayOfDeletes = [NSMutableArray arrayWithCapacity:3];
+
     for (NSUInteger i=1; i < rows; i++) {
-        NSIndexPath *path = [NSIndexPath indexPathForRow:i inSection:0];
+        NSIndexPath *path = [NSIndexPath indexPathForRow:(NSInteger)i inSection:0];
         [arrayOfDeletes addObject:path];
     }
-    [self.locationTableView deleteRowsAtIndexPaths:arrayOfDeletes withRowAnimation:UITableViewRowAnimationFade];
+    [strongLocationTableView deleteRowsAtIndexPaths:arrayOfDeletes withRowAnimation:UITableViewRowAnimationFade];
 }
 
 - (void)setupLocationDisplay {
@@ -124,20 +120,19 @@
     // Check if Urban Airship is allowed to use location
     BOOL airshipAllowedToUseLocation = [UALocationService airshipLocationServiceEnabled];
     if (!(locationServiceEnabled && locationServiceAuthorized && airshipAllowedToUseLocation)) {
-        UIAlertView *alertView = [[[UIAlertView alloc] initWithTitle:@"Location Error" 
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Location Error" 
                                                             message:@"The location service is either, not authorized, enabled, or Urban Airship does not have permissinon to use it" 
                                                            delegate:nil 
                                                   cancelButtonTitle:@"Dismiss" 
-                                                  otherButtonTitles:nil] autorelease];
+                                                  otherButtonTitles:nil];
         [alertView show];
     }
 }
 
 - (IBAction)mapLocationPressed:(id)sender{
-    UAMapPresentationController *mapController = [[UAMapPresentationController alloc] initWithNibName:@"UAMapPresentationViewController" 
+    UAMapPresentationController *mapController = [[UAMapPresentationController alloc] initWithNibName:@"UAMapPresentationViewController"
                                                                                                bundle:[NSBundle mainBundle]];
     mapController.locations = self.reportedLocations;
-    [mapController autorelease];
     [self.navigationController pushViewController:mapController animated:YES];
 }
 
@@ -147,12 +142,12 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = nil;
     if (0 == [indexPath indexAtPosition:1]) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
         cell.textLabel.text = [self.locationDisplay objectAtIndex:0];
-        cell.textLabel.textAlignment = UITextAlignmentCenter;
+        cell.textLabel.textAlignment = NSTextAlignmentCenter;// (iOS6) or UITextAlignmentCenter (<=iOS5);
     }
     if(1 == [indexPath indexAtPosition:1]) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"latitude"] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"latitude"];
         cell.textLabel.text = [self.locationDisplay objectAtIndex:[indexPath indexAtPosition:1]];
         CLLocation  *location = [self.reportedLocations lastObject];
         if (!location) {
@@ -163,7 +158,7 @@
         cell.detailTextLabel.text = [NSString stringWithFormat:@"%.7f", location.coordinate.latitude];
     }
     if (2 == [indexPath indexAtPosition:1]) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"longitude"] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"longitude"];
         cell.textLabel.text = [self.locationDisplay objectAtIndex:[indexPath indexAtPosition:1]];
         CLLocation *location = [self.reportedLocations lastObject];
         if (!location) {
@@ -177,7 +172,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [self.locationDisplay count];
+    return (NSInteger)[self.locationDisplay count];
 }
 
 #pragma mark -

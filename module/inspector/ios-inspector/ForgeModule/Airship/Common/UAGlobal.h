@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -59,7 +59,7 @@ typedef enum _UALogLevel {
 #endif
 
 extern BOOL uaLoggingEnabled; // Default is true
-extern UALogLevel uaLogLevel; // Default is UALogLevelDebug
+extern UALogLevel uaLogLevel; // Default is UALogLevelError
 
 #define UA_LTRACE(fmt, ...) UA_LEVEL_LOG(UALogLevelTrace, @"T", fmt, ##__VA_ARGS__)
 #define UA_LDEBUG(fmt, ...) UA_LEVEL_LOG(UALogLevelDebug, @"D", fmt, ##__VA_ARGS__)
@@ -71,12 +71,13 @@ extern UALogLevel uaLogLevel; // Default is UALogLevelDebug
 
 // constants
 #define kAirshipProductionServer @"https://device-api.urbanairship.com"
-#define kAnalyticsProductionServer @"https://combine.urbanairship.com";
+#define kAnalyticsProductionServer @"https://combine.urbanairship.com"
+#define kUAProductionLandingPageContentURL @"https://dl.urbanairship.com/aaa"
 
 #ifdef _UA_VERSION
 #define UA_VERSION @ _UA_VERSION
 #else
-#define UA_VERSION @ "1.1.2"
+#define UA_VERSION @ "0.0.0"
 #endif
 
 #define UA_VERSION_INTERFACE(CLASSNAME) \
@@ -125,29 +126,27 @@ return g_shared##CLASSNAME;                                                     
 {                                                                                           \
 return self;                                                                                \
 }                                                                                           \
-\
-- (id)retain                                                                                \
-{                                                                                           \
-return self;                                                                                \
-}                                                                                           \
-\
-- (oneway void)release                                                                      \
-{                                                                                           \
-}                                                                                           \
-\
-- (id)autorelease                                                                           \
-{                                                                                           \
-return self;                                                                                \
-}
 
-
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_4_1
-#define IF_IOS4_1_OR_GREATER(...) \
-if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_4_1) \
-{ \
-__VA_ARGS__ \
-}
-#else
-#define IF_IOS4_1_OR_GREATER(...)
+// TODO: Remove this when its actually available
+#ifndef kCFCoreFoundationVersionNumber_iOS_7_0
+#define kCFCoreFoundationVersionNumber_iOS_7_0 847.0
 #endif
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 70000
+#define IF_IOS7_OR_GREATER(...) \
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0) \
+    { \
+        __VA_ARGS__ \
+    }
+#else
+#define IF_IOS_7_OR_GREATER(...)
+#endif
+
+#define UA_SUPPRESS_PERFORM_SELECTOR_LEAK_WARNING(THE_CODE) \
+do { \
+_Pragma("clang diagnostic push") \
+_Pragma("clang diagnostic ignored \"-Warc-performSelector-leaks\"") \
+THE_CODE; \
+_Pragma("clang diagnostic pop") \
+} while (0)
 

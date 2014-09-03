@@ -1,5 +1,5 @@
 /*
- Copyright 2009-2013 Urban Airship Inc. All rights reserved.
+ Copyright 2009-2014 Urban Airship Inc. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
@@ -50,7 +50,7 @@
  * the side effect of assigning this class as the delegate of the
  * new CLLocationManager
  */
-@property (nonatomic, retain) CLLocationManager *locationManager;
+@property (nonatomic, strong) CLLocationManager *locationManager;
 
 /**
  * In certain cases, cached values are immediately returned when starting a location service.
@@ -108,7 +108,7 @@
 
 
 /// Delegate that receives location updates 
-@property (nonatomic, assign) id<UALocationProviderDelegate> delegate;
+@property (nonatomic, weak) id<UALocationProviderDelegate> delegate;
 
 /** 
  * Status of the location service.
