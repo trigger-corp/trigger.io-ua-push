@@ -4,7 +4,6 @@
 #import "UAAnalytics.h"
 #import "UAAppDelegateSurrogate.h"
 #import "UALocationService.h"
-#import "UA_SBJsonWriter.h"
 #import "urbanairship_API.h"
 
 @implementation urbanairship_EventListener
